@@ -41,15 +41,15 @@ UserSchema.statics.hashPassword = async function (password) {
   return await brypt.hash(password, 10);
 };
 
-
 UserSchema.methods.generateAuthToken = async function () {
-  const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET_KEY);
+  const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET_KEY, {
+    expiresIn: "1d",
+  });
   return token;
 };
 
 UserSchema.methods.comparePassword = async function (password) {
   return await brypt.compare(password, this.password);
 };
-
 
 export default mongoose.model("User", UserSchema);

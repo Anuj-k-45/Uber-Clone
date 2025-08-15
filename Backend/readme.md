@@ -90,3 +90,100 @@ curl -X POST http://localhost:4000/user/register \
   }
 }
 ```
+
+# User Login API Documentation
+
+## Endpoint
+
+`POST /user/login`
+
+## Description
+
+Authenticates a user and returns a JWT token if credentials are valid.
+
+## Request Body
+
+Send a JSON object with the following structure:
+
+```json
+{
+  "email": "john.doe@example.com",
+  "password": "yourpassword"
+}
+```
+
+- `email` (string, required): Valid email address
+- `password` (string, required): Password (min 8 characters)
+
+## Responses
+
+### Success
+
+- **Status Code:** `200 OK`
+- **Body:**
+  ```json
+  {
+    "token": "<JWT_TOKEN>",
+    "user": {
+      "_id": "<user_id>",
+      "fullname": {
+        "firstname": "John",
+        "lastname": "Doe"
+      },
+      "email": "john.doe@example.com"
+      // other user fields
+    }
+  }
+  ```
+
+### Validation Error
+
+- **Status Code:** `400 Bad Request`
+- **Body:**
+  ```json
+  {
+    "errors": [
+      {
+        "msg": "Please enter a valid email",
+        "param": "email",
+        "location": "body"
+      }
+      // ...other errors
+    ]
+  }
+  ```
+
+### Authentication Error
+
+- **Status Code:** `401 Unauthorized`
+- **Body:**
+  ```json
+  {
+    "message": "Invalid email or password"
+  }
+  ```
+
+## Example Request
+
+```sh
+curl -X POST http://localhost:4000/user/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john.doe@example.com","password":"yourpassword"}'
+```
+
+## Example Success Response
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "_id": "64e8b7c2f8a2c1e8b7c2f8a2",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Doe"
+    },
+    "email": "john.doe@example.com"
+    // other user fields
+  }
+}
+```
