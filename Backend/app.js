@@ -16,6 +16,7 @@ app.use(cookieParser())
 
 //Routes import
 import userRoutes from "./routes/user.routes.js";
+import captainRoutes from "./routes/captain.routes.js";
 import cookieParser from "cookie-parser";
 
 
@@ -24,6 +25,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/user", userRoutes);
+app.use("/captain", captainRoutes);
+
 
 
 export default app;
