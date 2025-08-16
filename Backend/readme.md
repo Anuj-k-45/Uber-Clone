@@ -10,8 +10,6 @@ Registers a new user in the system. Requires a valid email, a password (minimum 
 
 ## Request Body
 
-Send a JSON object with the following structure:
-
 ```json
 {
   "fullname": {
@@ -34,6 +32,7 @@ Send a JSON object with the following structure:
 
 - **Status Code:** `201 Created`
 - **Body:**
+
   ```json
   {
     "token": "<JWT_TOKEN>",
@@ -44,7 +43,6 @@ Send a JSON object with the following structure:
         "lastname": "Doe"
       },
       "email": "john.doe@example.com"
-      // other user fields
     }
   }
   ```
@@ -53,15 +51,14 @@ Send a JSON object with the following structure:
 
 - **Status Code:** `400 Bad Request`
 - **Body:**
+
   ```json
   {
     "errors": [
       {
         "msg": "Please enter a valid email",
-        "param": "email",
-        "location": "body"
+        "param": "email"
       }
-      // ...other errors
     ]
   }
   ```
@@ -86,7 +83,6 @@ curl -X POST http://localhost:4000/user/register \
       "lastname": "Doe"
     },
     "email": "john.doe@example.com"
-    // other user fields
   }
 }
 ```
@@ -102,8 +98,6 @@ curl -X POST http://localhost:4000/user/register \
 Authenticates a user and returns a JWT token if credentials are valid.
 
 ## Request Body
-
-Send a JSON object with the following structure:
 
 ```json
 {
@@ -121,6 +115,7 @@ Send a JSON object with the following structure:
 
 - **Status Code:** `200 OK`
 - **Body:**
+
   ```json
   {
     "token": "<JWT_TOKEN>",
@@ -131,7 +126,6 @@ Send a JSON object with the following structure:
         "lastname": "Doe"
       },
       "email": "john.doe@example.com"
-      // other user fields
     }
   }
   ```
@@ -140,15 +134,14 @@ Send a JSON object with the following structure:
 
 - **Status Code:** `400 Bad Request`
 - **Body:**
+
   ```json
   {
     "errors": [
       {
         "msg": "Please enter a valid email",
-        "param": "email",
-        "location": "body"
+        "param": "email"
       }
-      // ...other errors
     ]
   }
   ```
@@ -157,6 +150,7 @@ Send a JSON object with the following structure:
 
 - **Status Code:** `401 Unauthorized`
 - **Body:**
+
   ```json
   {
     "message": "Invalid email or password"
@@ -183,7 +177,126 @@ curl -X POST http://localhost:4000/user/login \
       "lastname": "Doe"
     },
     "email": "john.doe@example.com"
-    // other user fields
   }
+}
+```
+
+# User Profile API Documentation
+
+## Endpoint
+
+`GET /user/profile`
+
+## Description
+
+Returns the authenticated user's profile information. Requires a valid JWT token in the request (sent via cookie or Authorization header).
+
+## Request Headers
+
+- `Authorization: Bearer <JWT_TOKEN>` (if not using cookie)
+
+## Responses
+
+### Success
+
+- **Status Code:** `200 OK`
+- **Body:**
+
+  ```json
+  {
+    "user": {
+      "_id": "<user_id>",
+      "fullname": {
+        "firstname": "John",
+        "lastname": "Doe"
+      },
+      "email": "john.doe@example.com"
+    }
+  }
+  ```
+
+### Authentication Error
+
+- **Status Code:** `401 Unauthorized`
+- **Body:**
+
+  ```json
+  {
+    "message": "Authentication required"
+  }
+  ```
+
+## Example Request
+
+```sh
+curl -X GET http://localhost:4000/user/profile \
+  -H "Authorization: Bearer <JWT_TOKEN>"
+```
+
+## Example Success Response
+
+```json
+{
+  "user": {
+    "_id": "64e8b7c2f8a2c1e8b7c2f8a2",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Doe"
+    },
+    "email": "john.doe@example.com"
+  }
+}
+```
+
+# User Logout API Documentation
+
+## Endpoint
+
+`GET /user/logout`
+
+## Description
+
+Logs out the user by clearing the authentication token cookie and blacklisting the token. Requires the token to be sent via cookie or Authorization header.
+
+## Request Headers
+
+- `Authorization: Bearer <JWT_TOKEN>` (if not using cookie)
+
+## Responses
+
+### Success
+
+- **Status Code:** `200 OK`
+- **Body:**
+
+  ```json
+  {
+    "message": "Logged out successfully"
+  }
+  ```
+
+### Error
+
+- **Status Code:** `400 Bad Request`
+- **Body:**
+
+  ```json
+  {
+    "message": "Token not provided"
+  }
+  ```
+
+## Example Request
+
+```sh
+curl -X GET http://localhost:4000/user/logout \
+  -H "Authorization: Bearer <JWT_TOKEN>"
+```
+
+## Example Success Response
+
+```json
+{
+  "message": "Logged out successfully"
 }
 ```
