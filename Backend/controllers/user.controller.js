@@ -64,13 +64,28 @@ const getUser = async (req, res, next) => {
 };
 
 const logoutUser = async (req, res, next) => {
-  res.clearCookie("token");
+  try {
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
 
-  const token = req.cookies.token || req.headers.authorization.split(" ")[1];
+    if (!token) {
+      return res.status(400).json({ message: "No token provided" });
+    }
 
-  await blacklistModel.create({ token });
+    // Insert if not exists (avoids duplicate key errors)
+    await blacklistModel.updateOne(
+      { token },
+      { $set: { token } },
+      { upsert: true }
+    );
 
-  res.status(200).json({ message: "Logged out successfully" });
+    res.clearCookie("token");
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("🔥 Logout error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
+
+
 
 export { registerUser, loginUser, getUser, logoutUser };

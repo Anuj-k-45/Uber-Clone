@@ -38,7 +38,9 @@ const CaptainSignup = () => {
             submitHandler(e);
           }}
         >
-          <h3 className="text-lg font-medium mb-2">What's our captain's name</h3>
+          <h3 className="text-lg font-medium mb-2">
+            What's our captain's name
+          </h3>
           <div className="flex gap-4 mb-6">
             <input
               required="True"
@@ -62,7 +64,9 @@ const CaptainSignup = () => {
             />
           </div>
 
-          <h3 className="text-lg font-medium mb-2">What's our captain's email</h3>
+          <h3 className="text-lg font-medium mb-2">
+            What's our captain's email
+          </h3>
           <input
             required="True"
             value={email}
@@ -87,7 +91,7 @@ const CaptainSignup = () => {
           />
 
           <button className="bg-[#111] text-white font-semibold mb-3 rounded px-4 py-2  w-full text-lg placeholder:text-base">
-            Login
+            Create Account
           </button>
         </form>
         <p className="text-center text-sm">

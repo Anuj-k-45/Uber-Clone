@@ -1,18 +1,38 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+/* eslint-disable no-unused-vars */
+import React, { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { UserDataContext } from "../context/userContext";
+import axios from "axios";
 
 const UserLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userData, setUserData] = useState({})
 
-  const submitHandler = (e) => {
+  const { user, setUser } = useContext(UserDataContext);
+  const navigator = useNavigate();
+
+  const submitHandler = async (e) => {
     e.preventDefault();
-    setUserData({
+
+    const userData = {
       email: email,
       password: password,
-    });
-    console.log(userData);
+    };
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/user/login`,
+      userData
+    );
+
+    if (response.status === 200) {
+      const data = response.data;
+
+      setUser(data.user);
+      localStorage.setItem("token", data.token);
+
+      navigator("/home");
+    }
+
     setPassword("");
     setEmail("");
   };
@@ -67,9 +87,10 @@ const UserLogin = () => {
       </div>
 
       <div>
-        <Link 
-        to={"/captain-login"}
-        className="flex items-center justify-center bg-[#4a9e39] text-white font-semibold mb-5 rounded px-4 py-2  w-full text-lg placeholder:text-base">
+        <Link
+          to={"/captain-login"}
+          className="flex items-center justify-center bg-[#4a9e39] text-white font-semibold mb-5 rounded px-4 py-2  w-full text-lg placeholder:text-base"
+        >
           Sign in as Captain
         </Link>
       </div>
