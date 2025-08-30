@@ -41,34 +41,40 @@ const authUser = async (req, res, next) => {
 const authCaptain = async (req, res, next) => {
   let token;
 
-  if (req.cookies && req.cookies.token) {
+  // Get token from cookie or header
+  if (req.cookies?.token) {
     token = req.cookies.token;
-  } else if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer ")
-  ) {
+  } else if (req.headers.authorization?.startsWith("Bearer ")) {
     token = req.headers.authorization.split(" ")[1];
   }
-  console.log("The token is : " + token);
+
+  console.log("The token is: " + token);
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
+
   const isTokenBlacklisted = await blacklistModel.exists({ token });
   if (isTokenBlacklisted) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  let captain = null;
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const captain = await captainModel.findById(decoded._id);
 
-    captain = await captainModel.findById(decoded._id);
+    if (!captain) {
+      return res.status(404).json({ message: "Captain not found" });
+    }
+
     req.captain = captain;
+    next();
   } catch (err) {
-    return res.status(500).json({ message: "Internal Server Error" });
+    // Handle invalid/expired token
+    console.error(err);
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
-  req.captain = captain;
-  next();
 };
+
 
 export { authUser, authCaptain };

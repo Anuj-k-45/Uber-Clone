@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axious from "axios";
+import axios from "axios";
 import UserContext, { UserDataContext } from "../context/userContext";
 
 const UserSignup = () => {
@@ -25,7 +25,7 @@ const UserSignup = () => {
       password: password,
     };
 
-    const response = await axious.post(
+    const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/user/register`,
       newUser
     );
