@@ -45,6 +45,14 @@ const App = () => {
             </CaptainProtectedWrapper>
           }
         />
+        <Route
+          path="/captain-logout"
+          element={
+            <CaptainProtectedWrapper>
+              <UserLogout />
+            </CaptainProtectedWrapper>
+          }
+        />
       </Routes>
     </div>
   );
