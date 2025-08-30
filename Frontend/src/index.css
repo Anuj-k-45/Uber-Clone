@@ -1,2 +1,23 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'UberBold';
+  src: url('./assets/fonts/UberMoveBold.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'UberMedium';
+  src: url('./assets/fonts/UberMoveMedium.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: 'UberBold', sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
