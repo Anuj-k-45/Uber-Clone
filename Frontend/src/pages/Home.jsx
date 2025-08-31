@@ -4,6 +4,10 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import "remixicon/fonts/remixicon.css";
 import LocationSearchPanel from "../components/LocationSearchPanel";
+import VehiclePanel from "../components/VehiclePanel";
+import ConfirmRide from "../components/ConfirmRide";
+import LookingForDriver from "../components/LookingForDriver";
+import WaitingForDriver from "../components/WaitingForDriver";
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
@@ -12,7 +16,13 @@ const Home = () => {
   const panelRef = useRef(null);
   const panelCloseRef = useRef(null);
   const vehiclePannelRef = useRef(null);
+  const vehicleFoundRef = useRef(null);
+  const confirmRidePannelRef = useRef(null);
   const [vehiclePannelOpen, setVehiclePannelOpen] = useState(false);
+  const [confirmRidePannelOpen, setConfirmRidePannelOpen] = useState(false);
+  const [vehicleFound, setVehicleFound] = useState(false);
+  const waitingForDriverRef = useRef(null);
+  const [waitingForDriverOpen, setWaitingForDriverOpen] = useState(false);
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -42,6 +52,21 @@ const Home = () => {
 
   useGSAP(
     function () {
+      if (confirmRidePannelOpen) {
+        gsap.to(confirmRidePannelRef.current, {
+          transform: "translateY(0)",
+        });
+      } else {
+        gsap.to(confirmRidePannelRef.current, {
+          transform: "translateY(100%)",
+        });
+      }
+    },
+    [confirmRidePannelOpen]
+  );
+
+  useGSAP(
+    function () {
       if (vehiclePannelOpen) {
         gsap.to(vehiclePannelRef.current, {
           transform: "translateY(0)",
@@ -53,6 +78,36 @@ const Home = () => {
       }
     },
     [vehiclePannelOpen]
+  );
+
+  useGSAP(
+    function () {
+      if (vehicleFound) {
+        gsap.to(vehicleFoundRef.current, {
+          transform: "translateY(0)",
+        });
+      } else {
+        gsap.to(vehicleFoundRef.current, {
+          transform: "translateY(100%)",
+        });
+      }
+    },
+    [vehicleFound]
+  );
+
+  useGSAP(
+    function () {
+      if (waitingForDriverOpen) {
+        gsap.to(waitingForDriverRef.current, {
+          transform: "translateY(0)",
+        });
+      } else {
+        gsap.to(waitingForDriverRef.current, {
+          transform: "translateY(100%)",
+        });
+      }
+    },
+    [waitingForDriverOpen]
   );
 
   return (
@@ -115,88 +170,39 @@ const Home = () => {
           }
         </div>
       </div>
+
       <div
         ref={vehiclePannelRef}
         className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
       >
-        <div className="relative">
-          <h5
-            ref={panelCloseRef}
-            onClick={() => {
-              setVehiclePannelOpen(false);
-            }}
-            className="absolute right-5 top-2 text-2xl"
-          >
-            <i className="ri-arrow-down-wide-line"></i>
-          </h5>
-          <h3 className="text-lg font-semibold mb-3">Choose a ride</h3>
-          <div
-            className="flex border-2 border-gray-200 hover:border-black active:border-black mb-2 rounded-xl w-full p-3 items-center justify-between"
-            style={{ fontFamily: "'UberMedium', sans-serif" }}
-          >
-            <img className="h-15 mr-3 mb-1" src="car.png" />
-            <div className="w-3/4">
-              <h4
-                className="font-semibold text-lg text-gray-900"
-                style={{ fontFamily: "'UberMedium', sans-serif" }}
-              >
-                UberGo
-                <span>
-                  <i className="ri-user-fill"></i>4
-                </span>
-              </h4>
-              <h5 className="font-medium text-gray-900 text-sm">2 mins away</h5>
-              <p className="font-normal text-xs text-gray-600">
-                Affordable, compact rides
-              </p>
-            </div>
-            <h2 className="text-lg font-semibold">₹193.14</h2>
-          </div>
-          <div
-            className="flex border-2 border-gray-200 hover:border-black active:border-black mb-2 rounded-xl w-full p-3 items-center justify-between"
-            style={{ fontFamily: "'UberMedium', sans-serif" }}
-          >
-            <img className="h-11 mr-2" src="bike.png" />
-            <div className="w-3/4">
-              <h4
-                className="font-semibold text-lg text-gray-900"
-                style={{ fontFamily: "'UberMedium', sans-serif" }}
-              >
-                Moto
-                <span>
-                  <i className="ri-user-fill"></i>1
-                </span>
-              </h4>
-              <h5 className="font-medium text-gray-900 text-sm">3 mins away</h5>
-              <p className="font-normal text-xs text-gray-600">
-                Affordable motorcycle rides
-              </p>
-            </div>
-            <h2 className="text-lg font-semibold">₹65.25</h2>
-          </div>
-          <div
-            className="flex border-2 border-gray-200 hover:border-black active:border-black mb-2 rounded-xl w-full p-3 items-center justify-between"
-            style={{ fontFamily: "'UberMedium', sans-serif" }}
-          >
-            <img className="h-11 mr-2" src="auto.png" />
-            <div className="w-3/4">
-              <h4
-                className="font-semibold text-lg text-gray-900"
-                style={{ fontFamily: "'UberMedium', sans-serif" }}
-              >
-                UberAuto
-                <span>
-                  <i className="ri-user-fill"></i>3
-                </span>
-              </h4>
-              <h5 className="font-medium text-gray-900 text-sm">2 mins away</h5>
-              <p className="font-normal text-xs text-gray-600">
-                Affordable auto rides
-              </p>
-            </div>
-            <h2 className="text-lg font-semibold">₹118.68</h2>
-          </div>
-        </div>
+        <VehiclePanel
+          setVehiclePannelOpen={setVehiclePannelOpen}
+          setConfirmRidePannelOpen={setConfirmRidePannelOpen}
+        />
+      </div>
+
+      <div
+        ref={confirmRidePannelRef}
+        className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
+      >
+        <ConfirmRide
+          setConfirmRidePannelOpen={setConfirmRidePannelOpen}
+          setVehicleFound={setVehicleFound}
+        />
+      </div>
+
+      <div
+        ref={vehicleFoundRef}
+        className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
+      >
+        <LookingForDriver />
+      </div>
+
+      <div
+        ref={waitingForDriverRef}
+        className="fixed rounded-t-2xl w-full z-10 bottom-0  px-3 py-6 bg-white "
+      >
+        <WaitingForDriver setWaitingForDriverOpen={setWaitingForDriverOpen} />
       </div>
     </div>
   );
