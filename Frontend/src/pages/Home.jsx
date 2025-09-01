@@ -1,8 +1,8 @@
-/* eslint-disable no-unused-vars */
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import "remixicon/fonts/remixicon.css";
+import axios from "axios";
 import LocationSearchPanel from "../components/LocationSearchPanel";
 import VehiclePanel from "../components/VehiclePanel";
 import ConfirmRide from "../components/ConfirmRide";
@@ -12,21 +12,71 @@ import WaitingForDriver from "../components/WaitingForDriver";
 const Home = () => {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [inputType, setInputType] = useState(""); // "pickup" or "destination"
   const [panelOpen, setPanelOpen] = useState(false);
+  const [suppressSearch, setSuppressSearch] = useState(false); // 👈 new state
+
   const panelRef = useRef(null);
   const panelCloseRef = useRef(null);
   const vehiclePannelRef = useRef(null);
   const vehicleFoundRef = useRef(null);
   const confirmRidePannelRef = useRef(null);
+  const waitingForDriverRef = useRef(null);
+
   const [vehiclePannelOpen, setVehiclePannelOpen] = useState(false);
   const [confirmRidePannelOpen, setConfirmRidePannelOpen] = useState(false);
   const [vehicleFound, setVehicleFound] = useState(false);
-  const waitingForDriverRef = useRef(null);
   const [waitingForDriverOpen, setWaitingForDriverOpen] = useState(false);
+  const [pickupError, setPickupError] = useState("");
+  const [destinationError, setDestinationError] = useState("");
 
   const submitHandler = (e) => {
     e.preventDefault();
     console.log("form submitted");
+  };
+
+  // 🔍 Debounce + suppress search logic
+  useEffect(() => {
+    if (suppressSearch) {
+      setSuppressSearch(false); // reset flag after skipping one cycle
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      const query = (inputType === "pickup" ? pickup : destination).trim();
+      if (query.length > 1) {
+        axios
+          .get(
+            `http://localhost:4000/maps/suggestions?q=${encodeURIComponent(
+              query
+            )}`
+          )
+          .then((res) => {
+            console.log("Suggestions API response:", res.data);
+            if (Array.isArray(res.data)) {
+              setSuggestions(res.data);
+            } else if (res.data && Array.isArray(res.data.suggestions)) {
+              setSuggestions(res.data.suggestions);
+            } else {
+              setSuggestions([]);
+            }
+          })
+          .catch(() => setSuggestions([]));
+      } else {
+        setSuggestions([]);
+      }
+    }, 800);
+
+    return () => clearTimeout(handler);
+  }, [pickup, destination, inputType, suppressSearch]);
+
+  // ✅ When user clicks a suggestion
+  const handleSuggestionClick = (value) => {
+    if (inputType === "pickup") setPickup(value);
+    else setDestination(value);
+    setSuggestions([]);
+    setSuppressSearch(true); // 👈 prevent next API call
   };
 
   useGSAP(
@@ -121,7 +171,7 @@ const Home = () => {
         />
       </div>
       <div className="flex flex-col justify-end h-screen absolute top-0 w-full ">
-        <div className="bg-white h-[30%] p-6 relative">
+        <div className="bg-white h-[30%] px-6 pt-6 relative">
           <h5
             ref={panelCloseRef}
             onClick={() => {
@@ -141,33 +191,91 @@ const Home = () => {
             <div className="line absolute h-16 w-1 rounded-full top-[30%] left-4 bg-gray-900"></div>
             <input
               value={pickup}
-              onClick={() => setPanelOpen(true)}
-              onChange={(e) => setPickup(e.target.value)}
-              className="bg-[#eee] px-12 py-2 text-base rounded-lg w-full mt-5"
+              onClick={() => {
+                setPanelOpen(true);
+                setInputType("pickup");
+              }}
+              onChange={(e) => {
+                setPickup(e.target.value);
+                setInputType("pickup");
+                if (pickupError) setPickupError(false);
+              }}
+              className={`px-12 py-2 text-base rounded-lg w-full mt-5 
+    ${
+      pickupError
+        ? "border border-red-500 placeholder-red-500 bg-[#fee]"
+        : "bg-[#eee]"
+    }`}
               type="text"
-              placeholder="Add a pick-up location"
-              name=""
-              id=""
+              placeholder={
+                pickupError
+                  ? "⚠ Enter pickup location"
+                  : "Add a pick-up location"
+              }
             />
+
             <input
               value={destination}
-              onClick={() => setPanelOpen(true)}
-              onChange={(e) => setDestination(e.target.value)}
-              className="bg-[#eee] px-12 py-2 text-base rounded-lg w-full mt-3"
+              onClick={() => {
+                setPanelOpen(true);
+                setInputType("destination");
+              }}
+              onChange={(e) => {
+                setDestination(e.target.value);
+                setInputType("destination");
+                if (destinationError) setDestinationError(false);
+              }}
+              className={`px-12 py-2 text-base rounded-lg w-full mt-3 
+    ${
+      destinationError
+        ? "border border-red-500 placeholder-red-500 bg-[#fee]"
+        : "bg-[#eee]"
+    }`}
               type="text"
-              placeholder="Enter your destination"
-              name=""
-              id=""
+              placeholder={
+                destinationError
+                  ? "⚠ Enter destination"
+                  : "Enter your destination"
+              }
             />
           </form>
         </div>
         <div ref={panelRef} className="bg-white h-[0] px-5">
-          {
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              let valid = true;
+
+              if (!pickup.trim()) {
+                setPickupError("Please enter a pickup location");
+                valid = false;
+              } else {
+                setPickupError("");
+              }
+
+              if (!destination.trim()) {
+                setDestinationError("Please enter a destination");
+                valid = false;
+              } else {
+                setDestinationError("");
+              }
+
+              if (!valid) return;
+
+              setPanelOpen(false);
+              setVehiclePannelOpen(true);
+            }}
+            className="w-full bg-black mb-5 flex justify-center text-white font-semibold p-2 rounded-lg"
+          >
+            Find
+          </button>
+
+          <div className="">
             <LocationSearchPanel
-              setPanelOpen={setPanelOpen}
-              setVehiclePannelOpen={setVehiclePannelOpen}
+              suggestions={suggestions}
+              onSuggestionClick={handleSuggestionClick}
             />
-          }
+          </div>
         </div>
       </div>
 

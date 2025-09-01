@@ -5,6 +5,7 @@ import {
   fetchDistanceTime,
   fetchSuggestions,
 } from "../controllers/map.controller.js";
+import { getAutoCompleteSuggestions } from "../services/maps.service.js";
 
 const router = express.Router();
 
@@ -21,5 +22,16 @@ router.post("/get-distance-time", authUser, fetchDistanceTime);
 
 // Get autocomplete suggestions
 router.post("/get-suggestions", authUser, fetchSuggestions);
+router.get("/suggestions", async (req, res) => {
+  try {
+    const q = req.query.q;
+    const suggestions = await getAutoCompleteSuggestions(q);
+    res.json(suggestions);
+  } catch (err) {
+    console.error("Suggestions error:", err.message);
+    res.json([]); // ✅ don’t throw 500, just return []
+  }
+});
+
 
 export default router;
