@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
@@ -30,11 +31,39 @@ const Home = () => {
   const [waitingForDriverOpen, setWaitingForDriverOpen] = useState(false);
   const [pickupError, setPickupError] = useState("");
   const [destinationError, setDestinationError] = useState("");
+  const [fare, setFare] = useState(null);
+  const [loadingFare, setLoadingFare] = useState(false);
+  const [vehicleType, setVehicleType] = useState("");
 
   const submitHandler = (e) => {
     e.preventDefault();
     console.log("form submitted");
   };
+
+  async function createRide(vehicleType, fare) {
+    try {
+      const response = await axios.post(
+        "http://localhost:4000/ride/create",
+        {
+          pickup,
+          destination,
+          vehicleType,
+          fare: fare?.[vehicleType], // optional: send fare too
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      console.log("Ride was created successfully:", response.data);
+      return response; // ✅ return the response
+    } catch (error) {
+      console.error("Error creating ride:", error);
+      return null; // ✅ so caller can handle errors
+    }
+  }
 
   // 🔍 Debounce + suppress search logic
   useEffect(() => {
@@ -100,20 +129,23 @@ const Home = () => {
     [panelOpen]
   );
 
-  useGSAP(
-    function () {
-      if (confirmRidePannelOpen) {
-        gsap.to(confirmRidePannelRef.current, {
-          transform: "translateY(0)",
-        });
-      } else {
-        gsap.to(confirmRidePannelRef.current, {
-          transform: "translateY(100%)",
-        });
-      }
-    },
-    [confirmRidePannelOpen]
-  );
+  useGSAP(() => {
+    gsap.set(confirmRidePannelRef.current, { y: "100%" });
+
+    if (confirmRidePannelOpen) {
+      gsap.to(confirmRidePannelRef.current, {
+        y: "0%",
+        duration: 0.4,
+        ease: "power3.out",
+      });
+    } else {
+      gsap.to(confirmRidePannelRef.current, {
+        y: "100%",
+        duration: 0.4,
+        ease: "power3.in",
+      });
+    }
+  }, [confirmRidePannelOpen]);
 
   useGSAP(
     function () {
@@ -130,20 +162,22 @@ const Home = () => {
     [vehiclePannelOpen]
   );
 
-  useGSAP(
-    function () {
-      if (vehicleFound) {
-        gsap.to(vehicleFoundRef.current, {
-          transform: "translateY(0)",
-        });
-      } else {
-        gsap.to(vehicleFoundRef.current, {
-          transform: "translateY(100%)",
-        });
-      }
-    },
-    [vehicleFound]
-  );
+  useGSAP(() => {
+    if (vehicleFound) {
+      gsap.to(vehicleFoundRef.current, {
+        y: 0,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    } else {
+      gsap.to(vehicleFoundRef.current, {
+        y: "100%",
+        duration: 0.3,
+        ease: "power2.in",
+      });
+    }
+  }, [vehicleFound]);
+
 
   useGSAP(
     function () {
@@ -262,8 +296,38 @@ const Home = () => {
 
               if (!valid) return;
 
-              setPanelOpen(false);
-              setVehiclePannelOpen(true);
+              setLoadingFare(true);
+
+              console.log(pickup);
+              console.log(destination);
+              // 👈 start loading
+              axios
+                .get("http://localhost:4000/ride/get-fare", {
+                  params: { pickup, destination },
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  },
+                })
+                .then((res) => {
+                  if (res.data && res.data.fare) {
+                    setFare(res.data.fare);
+                    setPanelOpen(false);
+                    setVehiclePannelOpen(true);
+                  } else {
+                    alert("⚠ Unable to fetch routes between these locations.");
+                    setFare(null);
+                  }
+                })
+                .catch((err) => {
+                  console.error("Error fetching fare:", err);
+                  alert(
+                    "⚠ Unable to fetch routes. Please try different locations."
+                  );
+                  setFare(null);
+                })
+                .finally(() => {
+                  setLoadingFare(false);
+                });
             }}
             className="w-full bg-black mb-5 flex justify-center text-white font-semibold p-2 rounded-lg"
           >
@@ -272,6 +336,7 @@ const Home = () => {
 
           <div className="">
             <LocationSearchPanel
+              setFare={setFare}
               suggestions={suggestions}
               onSuggestionClick={handleSuggestionClick}
             />
@@ -284,6 +349,9 @@ const Home = () => {
         className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
       >
         <VehiclePanel
+          setVehicleType={setVehicleType}
+          fare={fare || { car: "--", moto: "--", auto: "--" }}
+          loadingFare={loadingFare}
           setVehiclePannelOpen={setVehiclePannelOpen}
           setConfirmRidePannelOpen={setConfirmRidePannelOpen}
         />
@@ -294,6 +362,11 @@ const Home = () => {
         className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
       >
         <ConfirmRide
+          pickup={pickup}
+          destination={destination}
+          fare={fare}
+          vehicleType={vehicleType}
+          createRide={createRide}
           setConfirmRidePannelOpen={setConfirmRidePannelOpen}
           setVehicleFound={setVehicleFound}
         />
@@ -301,14 +374,19 @@ const Home = () => {
 
       <div
         ref={vehicleFoundRef}
-        className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
+        className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 pt-5 bg-white "
       >
-        <LookingForDriver />
+        <LookingForDriver
+          pickup={pickup}
+          destination={destination}
+          fare={fare}
+          vehicleType={vehicleType}
+        />
       </div>
 
       <div
         ref={waitingForDriverRef}
-        className="fixed rounded-t-2xl w-full z-10 bottom-0  px-3 py-6 bg-white "
+        className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
       >
         <WaitingForDriver setWaitingForDriverOpen={setWaitingForDriverOpen} />
       </div>

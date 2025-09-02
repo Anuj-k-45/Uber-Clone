@@ -1,6 +1,6 @@
 import express from "express";
-import { body } from "express-validator";
-import { createRide } from "../controllers/ride.controller.js";
+import { body, query } from "express-validator";
+import { calculateFare, createRide } from "../controllers/ride.controller.js";
 import { authUser } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -25,6 +25,20 @@ router.post(
     .isIn(["auto", "car", "moto"])
     .withMessage("Invalid vehicle type"),
   createRide
+);
+
+router.get(
+  "/get-fare",
+  authUser,
+  query("pickup")
+    .isString()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Invalid pickup address"),
+  query("destination")
+    .isString()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Invalid destination address"),
+  calculateFare
 );
 
 export default router;
