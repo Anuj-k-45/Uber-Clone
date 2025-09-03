@@ -5,13 +5,71 @@ import RidePopUp from "../components/RidePopUp";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ConfirmRidePopUp from "../components/ConfirmRidePopUp";
+import { useContext } from "react";
+import { CaptainDataContext } from "../context/captainContext";
+import { SocketContext } from "../context/SocketContext";
+import { useEffect } from "react";
 
 const CaptainHome = () => {
   const ridePopupRef = useRef(null);
   const confirmRidePopupRef = useRef(null);
 
-  const [ridePopupPanel, setRidePopupPanel] = useState(true);
+  const [ridePopupPanel, setRidePopupPanel] = useState(false);
   const [confirmRidePopupPanel, setConfirmRidePopupPanel] = useState(false);
+
+  const { captain } = useContext(CaptainDataContext);
+  const { socket } = useContext(SocketContext);
+
+  const [ride, setRide] = useState(null);
+
+
+
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewRide = (data) => {
+      console.log("📥 New ride event received:", data);
+      setRide(data); // ✅ unwrap payload
+      setRidePopupPanel(true);
+    };
+
+    socket.on("new-ride", handleNewRide);
+
+    return () => {
+      socket.off("new-ride", handleNewRide);
+    };
+  }, [socket]);
+
+
+
+  useEffect(() => {
+        socket.emit('join', {
+            userId: captain._id,
+            userType: 'captain'
+        })
+        const updateLocation = () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+
+                  console.log(position.coords.latitude + " " + position.coords.longitude)
+
+                    socket.emit('update-location-captain', {
+                        userId: captain._id,
+                        location: {
+                            ltd: position.coords.latitude,
+                            lng: position.coords.longitude
+                        }
+                    })
+                })
+            }
+        }
+
+        // const locationInterval = setInterval(updateLocation, 10000)
+        updateLocation()
+
+        // return () => clearInterval(locationInterval)
+    }, [captain, socket])
 
   useGSAP(
     function () {
@@ -67,6 +125,8 @@ const CaptainHome = () => {
         className="fixed rounded-t-2xl w-full z-10 translate-y-full bottom-0 px-3 py-6 bg-white "
       >
         <RidePopUp
+          ride={ride}
+          setRide={setRide}
           setRidePopupPanel={setRidePopupPanel}
           confirmRidePopupPanel={setConfirmRidePopupPanel}
         />
@@ -76,6 +136,7 @@ const CaptainHome = () => {
         className="fixed h-screen rounded-t-2xl w-full z-10 translate-y-full bottom-0 px-3 py-6 bg-white "
       >
         <ConfirmRidePopUp
+          ride={ride}
           setRidePopupPanel={setRidePopupPanel}
           setConfirmRidePopupPanel={setConfirmRidePopupPanel}
         />

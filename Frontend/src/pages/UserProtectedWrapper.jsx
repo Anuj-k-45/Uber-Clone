@@ -15,18 +15,21 @@ const UserProtectedWrapper = ({ children }) => {
       return;
     }
 
+    const url = "http://localhost:4000"
+
     axios
-          .get(`${import.meta.env.VITE_API_URL}/user/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          .then((res) => {
-            setUser(res.data.captain);
-            setIsLoading(false);
-          })
-          .catch(() => {
-            localStorage.removeItem("token");
-            navigator("/login");
-          });
+      .get(`${url}/user/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        console.log("The user is:", JSON.stringify(res.data.user, null, 2));
+        setUser(res.data.user);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+        navigator("/login");
+      });
   }, [token, navigator, setUser]);
 
   if (isLoading) return <div>Loading...</div>;

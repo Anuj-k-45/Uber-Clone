@@ -1,5 +1,4 @@
-/* eslint-disable no-unused-vars */
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import "remixicon/fonts/remixicon.css";
@@ -9,6 +8,8 @@ import VehiclePanel from "../components/VehiclePanel";
 import ConfirmRide from "../components/ConfirmRide";
 import LookingForDriver from "../components/LookingForDriver";
 import WaitingForDriver from "../components/WaitingForDriver";
+import { UserDataContext } from "../context/userContext";
+import { SocketContext } from "../context/SocketContext";
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
@@ -34,6 +35,9 @@ const Home = () => {
   const [fare, setFare] = useState(null);
   const [loadingFare, setLoadingFare] = useState(false);
   const [vehicleType, setVehicleType] = useState("");
+
+  const { socket } = useContext(SocketContext);
+  const { user } = useContext(UserDataContext);
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -65,7 +69,6 @@ const Home = () => {
     }
   }
 
-  // 🔍 Debounce + suppress search logic
   useEffect(() => {
     if (suppressSearch) {
       setSuppressSearch(false); // reset flag after skipping one cycle
@@ -100,7 +103,16 @@ const Home = () => {
     return () => clearTimeout(handler);
   }, [pickup, destination, inputType, suppressSearch]);
 
-  // ✅ When user clicks a suggestion
+
+
+
+  useEffect(() => {
+    socket.emit("join", { userType: "user", userId: user._id });
+  }, [user, socket]);
+
+
+
+
   const handleSuggestionClick = (value) => {
     if (inputType === "pickup") setPickup(value);
     else setDestination(value);
@@ -177,7 +189,6 @@ const Home = () => {
       });
     }
   }, [vehicleFound]);
-
 
   useGSAP(
     function () {

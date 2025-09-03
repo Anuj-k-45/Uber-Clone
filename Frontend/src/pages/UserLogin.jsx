@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { UserDataContext } from "../context/userContext";
 import axios from "axios";
 
-const UserLogin = () => {
+const UserLogin = (props) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
