@@ -25,13 +25,10 @@ const loginUser = async (req, res, next) => {
 
   res.cookie("token", token);
 
-  console.log("Logged in successfully...");
-
   return res.status(200).json({ token, user });
 };
 
 const registerUser = async (req, res, next) => {
-  console.log(req.body);
   const error = validationResult(req);
   if (!error.isEmpty()) {
     return res.status(400).json({ errors: error.array() });
@@ -85,7 +82,5 @@ const logoutUser = async (req, res, next) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 export { registerUser, loginUser, getUser, logoutUser };

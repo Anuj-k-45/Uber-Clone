@@ -5,8 +5,6 @@ import blacklistModel from "../models/blacklist.model.js";
 
 const registerCaptain = async (req, res, next) => {
   try {
-    console.log("The body is : " + req.body);
-    console.log("The body is : " + JSON.stringify(req.body));
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -14,8 +12,6 @@ const registerCaptain = async (req, res, next) => {
     }
 
     const { fullname, email, password, vehicle } = req.body;
-    console.log("The body is : ");
-    console.log(req.body);
 
     const isCaptainExists = await CaptainModel.findOne({ email });
     if (isCaptainExists) {
@@ -58,7 +54,6 @@ const loginCaptain = async (req, res, next) => {
 
     const token = captain.generateToken();
     res.cookie("token", token);
-    console.log("Logged in successfully...");
 
     return res.status(200).json({ token, captain });
   } catch (error) {

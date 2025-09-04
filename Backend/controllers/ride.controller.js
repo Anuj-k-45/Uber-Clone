@@ -27,21 +27,14 @@ async function createRide(req, res) {
       destination,
       vehicleType,
     });
-    console.log("req.user:", req.user);
-    console.log("ride:", ride);
-    console.log(pickup);
     const pickupCoordinates = await getAddressCoordinate(pickup);
-    console.log(JSON.stringify(pickupCoordinates));
     const captainsInRadius = await getCaptainsInTheRadius(
       pickupCoordinates.lat,
       pickupCoordinates.lon,
       100
     );
-    console.log(JSON.stringify(captainsInRadius));
 
     ride.otp = "";
-
-    console.log("ride before populate:", ride);
 
     const rideWithUser = await rideModel.findById(ride._id).populate("user");
 
@@ -53,8 +46,6 @@ async function createRide(req, res) {
       return res.status(404).json({ error: "No user found for this ride" });
     }
 
-    console.log("rideWithUser after populate:", rideWithUser);
-
     // Return populated ride
 
     captainsInRadius.map((captain) => {
@@ -63,8 +54,6 @@ async function createRide(req, res) {
         payload: rideWithUser,
       });
     });
-
-    console.log("Ride created successfully!");
 
     res.status(201).json(rideWithUser);
   } catch (error) {
@@ -94,8 +83,6 @@ const confirmRide = async (req, res) => {
   try {
     const { rideId } = req.body;
     const captainId = req.user?._id || req.captain?._id;
-
-    console.log("Confirming ride:", rideId, "for captain:", captainId);
 
     if (!rideId || !captainId) {
       return res
@@ -163,7 +150,7 @@ const finishRide = async (req, res) => {
       type: "ride-ended",
       payload: ride,
     });
-    
+
     res.status(200).json(ride);
   } catch (error) {
     console.error("Error finishing ride:", error);

@@ -30,7 +30,6 @@ const FinishRide = ({ rideData, setFinishRidePanel }) => {
       );
 
       if (response.status === 200) {
-        console.log("Ride finished:", response.data);
         setFinishRidePanel(false); // close panel
         navigate("/captain-home", { state: { ride: rideData } });
       }

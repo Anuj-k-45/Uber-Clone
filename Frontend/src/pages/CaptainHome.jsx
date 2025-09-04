@@ -28,7 +28,6 @@ const CaptainHome = () => {
     if (!socket) return;
 
     const handleNewRide = (data) => {
-      console.log("📥 New ride event received:", data);
       setRide(data); // ✅ unwrap payload
       setRidePopupPanel(true);
     };
@@ -89,7 +88,6 @@ const CaptainHome = () => {
       setConfirmRidePopupPanel(true);
     }
     setRidePopupPanel(false);
-    console.log("ride confirmed");
   }
 
   useGSAP(

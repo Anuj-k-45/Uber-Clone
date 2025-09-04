@@ -48,8 +48,6 @@ const authCaptain = async (req, res, next) => {
     token = req.headers.authorization.split(" ")[1];
   }
 
-  console.log("The token is: " + token);
-
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -75,6 +73,5 @@ const authCaptain = async (req, res, next) => {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
-
 
 export { authUser, authCaptain };

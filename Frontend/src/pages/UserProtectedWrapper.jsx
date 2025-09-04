@@ -22,7 +22,6 @@ const UserProtectedWrapper = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        console.log("The user is:", JSON.stringify(res.data.user, null, 2));
         setUser(res.data.user);
         setIsLoading(false);
       })

@@ -20,10 +20,6 @@ const CaptainProtectedWrapper = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        console.log(
-          "The captain is:",
-          JSON.stringify(res.data.captain, null, 2)
-        );
         setCaptain(res.data.captain);
         setIsLoading(false);
       })

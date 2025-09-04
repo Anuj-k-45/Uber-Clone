@@ -36,7 +36,6 @@ const ConfirmRidePopUp = (props) => {
       navigate("/captain-riding", { state: { ride: data } });
     }
     setOtp("");
-    console.log("ride started");
   };
 
   return (
