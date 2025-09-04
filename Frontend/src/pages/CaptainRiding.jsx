@@ -68,6 +68,7 @@ const CaptainRiding = () => {
           pickup={rideData.pickup}
           destination={rideData.destination}
           followCaptain={true}
+          initialFocus="pickup"
         />
       </div>
 

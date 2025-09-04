@@ -12,7 +12,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { SocketContext } from "../context/SocketContext";
 
-/** ICONS (declare once to avoid re-creating on every render) */
+/** ICONS */
 const carIcon = L.icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
   iconSize: [42, 42],
@@ -25,18 +25,18 @@ const pinIcon = L.icon({
   iconAnchor: [14, 28],
 });
 
-/** Helper to recentre the map when `position` changes */
+/** Recenter helper */
 function Recenter({ position, zoom = null }) {
   const map = useMap();
   useEffect(() => {
     if (!position) return;
     const targetZoom = zoom ?? Math.max(map.getZoom(), 15);
-    map.flyTo(position, targetZoom, { duration: 0.5 });
+    map.flyTo(position, targetZoom, { duration: 0.8 });
   }, [position, zoom, map]);
   return null;
 }
 
-/** Convert a variety of formats into [lat, lng] */
+/** Convert to [lat, lng] */
 function toLatLng(val) {
   if (!val) return null;
   if (Array.isArray(val) && val.length === 2) return val;
@@ -60,8 +60,9 @@ export default function RideTrackingMap({
   const [route, setRoute] = useState([]);
   const [pickupCoords, setPickupCoords] = useState(null);
   const [destinationCoords, setDestinationCoords] = useState(null);
+  const [focusedOnce, setFocusedOnce] = useState(false); // 👈 track if we already focused on pickup
 
-  // parse pickup/destination (string → coords)
+  // geocode pickup/destination
   useEffect(() => {
     let cancelled = false;
 
@@ -72,7 +73,7 @@ export default function RideTrackingMap({
 
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          `https://nominatim.openstreetmap.org/search?format=json&email=your-email@example.com&q=${encodeURIComponent(
             p
           )}`
         );
@@ -139,7 +140,7 @@ export default function RideTrackingMap({
     };
   }, [socket, rideId]);
 
-  // map center priority: pickup → captain → default city
+  // center priority: pickup → captain → default
   const center = pickupCoords || captainPos || [22.5726, 88.3639];
 
   return (
@@ -175,7 +176,20 @@ export default function RideTrackingMap({
             pathOptions={{ color: "#111", weight: 4 }}
           />
         )}
-        {followCaptain && captainPos && <Recenter position={captainPos} />}
+
+        {/* 👇 Fly to pickup only once when available */}
+        {!focusedOnce && pickupCoords && (
+          <Recenter
+            position={pickupCoords}
+            zoom={16}
+            onMoveEnd={() => setFocusedOnce(true)}
+          />
+        )}
+
+        {/* After that, keep following captain */}
+        {focusedOnce && followCaptain && captainPos && (
+          <Recenter position={captainPos} />
+        )}
       </MapContainer>
     </div>
   );

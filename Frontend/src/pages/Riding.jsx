@@ -48,6 +48,7 @@ const Riding = () => {
           pickup={rideData.pickup} // string or coords OK
           destination={rideData.destination} // string or coords OK
           followCaptain={true}
+          initialFocus="pickup"
         />
       </div>
 
