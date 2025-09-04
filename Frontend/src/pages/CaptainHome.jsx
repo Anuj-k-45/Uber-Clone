@@ -41,33 +41,37 @@ const CaptainHome = () => {
   }, [socket]);
 
   useEffect(() => {
-    socket.emit("join", {
-      userId: captain._id,
-      userType: "captain",
-    });
-    const updateLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-          console.log(
-            position.coords.latitude + " " + position.coords.longitude
-          );
+    if (!socket || !captain) return;
 
+    // register socket id in backend + optionally join ride rooms later
+    socket.emit("join", { userId: captain._id, userType: "captain" });
+
+    let watchId = null;
+    if (navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
           socket.emit("update-location-captain", {
             userId: captain._id,
             location: {
               ltd: position.coords.latitude,
               lng: position.coords.longitude,
+              heading: position.coords.heading || null,
             },
           });
-        });
-      }
+        },
+        (err) => {
+          console.warn("Geolocation error:", err);
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
+      );
+    }
+
+    return () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      // optionally tell server we're done:
+      socket.emit("leave", { userId: captain._id, userType: "captain" });
     };
-
-    // const locationInterval = setInterval(updateLocation, 10000)
-    updateLocation();
-
-    // return () => clearInterval(locationInterval)
-  }, [captain, socket]);
+  }, [socket, captain]);
 
   async function confirmRide() {
     const response = await axios.post("http://localhost:4000/ride/confirm-ride", {

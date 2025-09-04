@@ -44,11 +44,9 @@ const Home = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    console.log("form submitted");
   };
 
   socket.on("ride-confirmed", (data) => {
-    console.log("📥 Ride confirmed event received:", data);
     setConfirmRidePannelOpen(false);
     setRide(data);
     setVehicleFound(true);
@@ -72,7 +70,6 @@ const Home = () => {
         }
       );
 
-      console.log("Ride was created successfully:", response.data);
       return response; // ✅ return the response
     } catch (error) {
       console.error("Error creating ride:", error);
@@ -96,7 +93,6 @@ const Home = () => {
             )}`
           )
           .then((res) => {
-            console.log("Suggestions API response:", res.data);
             if (Array.isArray(res.data)) {
               setSuggestions(res.data);
             } else if (res.data && Array.isArray(res.data.suggestions)) {
@@ -121,13 +117,11 @@ const Home = () => {
   const navigate = useNavigate();
 
   socket.on("ride-started", (data) => {
-    console.log("ride-started event received:", data);
     setRide(data);
     navigate("/riding", { state: { ride: data } });
   });
 
   socket.on("ride-ended", (data) => {
-    console.log("ride-completed event received:", data);
     setRide(data);
     navigate("/home", { state: { ride: data } });
   });
@@ -338,10 +332,6 @@ const Home = () => {
               if (!valid) return;
 
               setLoadingFare(true);
-
-              console.log(pickup);
-              console.log(destination);
-              // 👈 start loading
               axios
                 .get("http://localhost:4000/ride/get-fare", {
                   params: { pickup, destination },
