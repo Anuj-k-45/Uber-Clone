@@ -1,9 +1,4 @@
-import React, {
-  useRef,
-  useState,
-  useEffect,
-  useContext,
-} from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import "remixicon/fonts/remixicon.css";
@@ -16,6 +11,7 @@ import WaitingForDriver from "../components/WaitingForDriver";
 import { UserDataContext } from "../context/userContext";
 import { SocketContext } from "../context/SocketContext";
 import { useNavigate } from "react-router-dom";
+import LiveTracking from "../components/LiveTracking";
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
@@ -213,34 +209,41 @@ const Home = () => {
     }
   }, [vehicleFound]);
 
-  useGSAP(
-    function () {
-      if (waitingForDriverOpen) {
-        gsap.to(waitingForDriverRef.current, {
-          transform: "translateY(0)",
-        });
-        setVehicleFound(false);
-      } else {
-        gsap.to(waitingForDriverRef.current, {
-          transform: "translateY(100%)",
-        });
-      }
-    },
-    [waitingForDriverOpen]
-  );
+  useGSAP(() => {
+    gsap.set(waitingForDriverRef.current, { yPercent: 110, opacity: 0 }); // push extra off-screen
+  }, []);
+
+  useGSAP(() => {
+    const el = waitingForDriverRef.current;
+    if (waitingForDriverOpen) {
+      setVehicleFound(false); // hide the previous panel
+      gsap.to(el, {
+        yPercent: 0,
+        opacity: 1,
+        duration: 0.3,
+        ease: "power2.out",
+        clearProps: "transform", // keep things clean after open
+      });
+    } else {
+      gsap.to(el, {
+        yPercent: 110, // overshoot so it never peeks
+        opacity: 0,
+        duration: 0.3,
+        ease: "power2.in",
+      });
+    }
+  }, [waitingForDriverOpen]);
 
   return (
     <div className="h-screen relative overflow-hidden">
       <img className="w-15 absolute left-5 top-5" src="uber_logo.png" alt="" />
-      <div className="h-screen w-screen">
-        <img
-          className="h-full w-full object-cover"
-          src="https://miro.medium.com/v2/resize:fit:1400/0*gwMx05pqII5hbfmX.gif"
-          alt=""
-        />
+      <div className="absolute inset-0 z-0">
+        <div>
+          <LiveTracking pickup={pickup} destination={destination} />
+        </div>
       </div>
-      <div className="flex flex-col justify-end h-screen absolute top-0 w-full ">
-        <div className="bg-white h-[30%] px-6 pt-6 relative">
+      <div className="flex flex-col justify-end h-screen absolute top-0 w-full z-[9999] pointer-events-none">
+        <div className="bg-white h-[30%] px-6 pt-6 relative pointer-events-auto">
           <h5
             ref={panelCloseRef}
             onClick={() => {
@@ -309,7 +312,10 @@ const Home = () => {
             />
           </form>
         </div>
-        <div ref={panelRef} className="bg-white h-[0] px-5">
+        <div
+          ref={panelRef}
+          className="bg-white h-[0] px-5 overflow-visible pointer-events-auto"
+        >
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -364,7 +370,7 @@ const Home = () => {
                   setLoadingFare(false);
                 });
             }}
-            className="w-full bg-black mb-5 flex justify-center text-white font-semibold p-2 rounded-lg"
+            className="w-full bg-black mb-5 flex justify-center text-white font-semibold p-2 rounded-lg pointer-events-auto"
           >
             Find
           </button>
@@ -381,7 +387,7 @@ const Home = () => {
 
       <div
         ref={vehiclePannelRef}
-        className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
+        className="fixed rounded-t-2xl w-full bottom-0 translate-y-full px-3 py-6 bg-white z-[9999] pointer-events-auto"
       >
         <VehiclePanel
           setVehicleType={setVehicleType}
@@ -394,7 +400,7 @@ const Home = () => {
 
       <div
         ref={confirmRidePannelRef}
-        className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
+        className="fixed rounded-t-2xl w-full bottom-0 translate-y-full px-3 py-6 bg-white z-[9999] pointer-events-auto"
       >
         <ConfirmRide
           pickup={pickup}
@@ -409,7 +415,7 @@ const Home = () => {
 
       <div
         ref={vehicleFoundRef}
-        className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 pt-5 bg-white "
+        className="fixed rounded-t-2xl w-full bottom-0 translate-y-full px-3 pt-5 bg-white z-[9999] pointer-events-auto"
       >
         <LookingForDriver
           pickup={pickup}
@@ -421,7 +427,8 @@ const Home = () => {
 
       <div
         ref={waitingForDriverRef}
-        className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
+        className="fixed rounded-t-2xl w-full bottom-0 px-3 bg-white z-[9999] pointer-events-auto"
+        style={{ willChange: "transform" }}
       >
         <WaitingForDriver
           ride={ride}

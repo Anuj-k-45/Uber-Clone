@@ -10,6 +10,7 @@ import { CaptainDataContext } from "../context/captainContext";
 import { SocketContext } from "../context/SocketContext";
 import { useEffect } from "react";
 import axios from "axios";
+import LiveTracking from "../components/LiveTracking";
 
 const CaptainHome = () => {
   const ridePopupRef = useRef(null);
@@ -127,18 +128,14 @@ const CaptainHome = () => {
         <i className="text-xl ri-logout-box-line"></i>
       </Link>
       <div className="h-[75%] w-full">
-        <img
-          className="h-full w-full object-cover"
-          src="https://miro.medium.com/v2/resize:fit:1400/0*gwMx05pqII5hbfmX.gif"
-          alt=""
-        />
+        <LiveTracking />
       </div>
-      <div className="absolute bottom-0 w-full rounded-t-2xl bg-white pb-3 pt-5 px-3 flex flex-col justify-between">
+      <div className="absolute bottom-0 w-full rounded-t-2xl bg-white pb-3 pt-5 px-3 flex flex-col justify-between z-[9999]">
         <CaptainDetails />
       </div>
       <div
         ref={ridePopupRef}
-        className="fixed rounded-t-2xl w-full z-10 translate-y-full bottom-0 px-3 py-6 bg-white "
+        className="fixed rounded-t-2xl w-full translate-y-full bottom-0 px-3 py-6 bg-white z-[9999]"
       >
         <RidePopUp
           ride={ride}
@@ -150,7 +147,7 @@ const CaptainHome = () => {
       </div>
       <div
         ref={confirmRidePopupRef}
-        className="fixed h-screen rounded-t-2xl w-full z-10 translate-y-full bottom-0 px-3 py-6 bg-white "
+        className="fixed h-screen rounded-t-2xl w-full translate-y-full bottom-0 px-3 py-6 bg-white z-[9999]"
       >
         <ConfirmRidePopUp
           ride={ride}
