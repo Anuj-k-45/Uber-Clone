@@ -3,7 +3,7 @@ import React from "react";
 const RidePopUp = (props) => {
   let distance = props.ride?.distance;
   distance = (distance / 1000).toFixed(2);
-  
+
   return (
     <div className="px-2">
       <h5
@@ -58,6 +58,7 @@ const RidePopUp = (props) => {
           <button
             onClick={() => {
               props.setRidePopupPanel(false);
+              props.confirmRide();
               props.confirmRidePopupPanel(true);
             }}
             className="w-full bg-green-500 text-white font-semibold p-2 rounded-lg"
@@ -67,6 +68,7 @@ const RidePopUp = (props) => {
           <button
             onClick={() => {
               props.setRidePopupPanel(false);
+              
             }}
             className="w-full bg-gray-400 text-gray-700 font-semibold p-2 rounded-lg"
           >

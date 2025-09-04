@@ -1,9 +1,36 @@
+import axios from "axios";
 import React from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const FinishRide = (props) => {
-  const submitHandler = (e) => {
+  let distance = props.rideData?.distance;
+  distance = (distance / 1000).toFixed(2);
+
+  const navigate = useNavigate();
+
+  const submitHandler = async (e) => {
     e.preventDefault();
+    const response = await axios.post(
+      "http://localhost:4000/ride/end-ride",
+      {
+        rideId: props.rideData._id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      const data = response.data;
+      console.log(data);
+      props.setFinishRidePanel(false);
+      navigate("/captain-home", { state: { ride: props.rideData } });
+      console.log("ride finished");
+    } else {
+      console.log("There was an error: " + response);
+    }
   };
 
   return (
@@ -24,35 +51,36 @@ const FinishRide = (props) => {
             src="https://img.freepik.com/free-photo/beautiful-charming-girl-wears-pink-hoodie-visor-cap-back_176532-7775.jpg"
             alt=""
           />
-          <h2 className="text-lg font-medium">Sanjana Kurade</h2>
+          <h2 className="text-lg font-medium">
+            {props.rideData?.user.fullname.firstname}{" "}
+            {props.rideData?.user.fullname.lastname}
+          </h2>
         </div>
-        <h5 className="text-lg font-semibold">2.2 KM</h5>
+        <h5 className="text-lg font-semibold">{distance} KM</h5>
       </div>
       <div className="flex gap-2 flex-col justify-between items-center">
         <div className="w-full">
           <div className="flex items-center gap-5 p-3 border-b border-gray-300">
             <i className="text-lg ri-map-pin-2-fill"></i>
             <div>
-              <h3 className="text-lg font-medium">562/11-A</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                Kankariya Talab, Bhopal
+                {props.rideData?.pickup}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-5 p-3 border-b border-gray-300">
             <i className="text-lg ri-map-pin-3-fill"></i>{" "}
             <div>
-              <h3 className="text-lg font-medium">562/11-A</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                Kankariya Talab, Bhopal
+                {props.rideData?.destination}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-5 p-3 ">
             <i className="text-lg ri-currency-line"></i>{" "}
             <div>
-              <h3 className="text-lg font-medium">₹193.68</h3>
-              <p className="text-sm -mt-1 text-gray-600">Cash Cash</p>
+              <h3 className="text-lg font-medium">₹{props.rideData?.fare}</h3>
+              <p className="text-sm -mt-1 text-gray-600">Total Fare</p>
             </div>
           </div>
         </div>
@@ -63,15 +91,15 @@ const FinishRide = (props) => {
             }}
           >
             <div className="w-full flex gap-3">
-              <Link
-                to={"/captain-home"}
+              <button
+                type="submit"
                 onClick={() => {
                   props.setFinishRidePanel(false);
                 }}
                 className="w-full bg-green-500 flex justify-center text-white font-semibold p-2 rounded-lg"
               >
                 Finish
-              </Link>
+              </button>
             </div>
           </form>
         </div>

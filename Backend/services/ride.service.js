@@ -115,7 +115,7 @@ async function initRide({ user, pickup, destination, vehicleType }) {
 // ---------------------
 // Confirm Ride
 // ---------------------
-async function confirmRide({ rideId, captain }) {
+async function acceptRide({ rideId, captain }) {
   if (!rideId) throw new Error("Ride id is required");
 
   await Ride.findOneAndUpdate(
@@ -174,4 +174,4 @@ async function endRide({ rideId, captain }) {
   return ride;
 }
 
-export { initRide, getFare, confirmRide, startRide, endRide };
+export { initRide, getFare, acceptRide, startRide, endRide };

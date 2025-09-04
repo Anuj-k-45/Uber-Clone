@@ -1,14 +1,42 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const ConfirmRidePopUp = (props) => {
   let distance = props.ride?.distance;
   distance = (distance / 1000).toFixed(2);
 
+  const navigate = useNavigate();
+
   const [otp, setOtp] = useState("");
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
+    if (otp.trim() === "") {
+      alert("Please enter OTP");
+      return;
+    }
+    const response = await axios.post(
+      "http://localhost:4000/ride/start-ride",
+      {
+        rideId: props.ride._id,
+        otp: otp,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      const data = response.data;
+      props.setRide(data);
+      props.setRidePopupPanel(false);
+      props.setConfirmRidePopupPanel(false);
+      navigate("/captain-riding", { state: { ride: data } });
+    }
+    setOtp("");
+    console.log("ride started");
   };
 
   return (
@@ -81,13 +109,12 @@ const ConfirmRidePopUp = (props) => {
               />
             </div>
             <div className="w-full flex gap-3">
-              <Link
-                to={"/captain-riding"}
-                onClick={() => {}}
+              <button
+                type="submit"
                 className="w-full bg-green-500 flex justify-center text-white font-semibold p-2 rounded-lg"
               >
                 Confirm
-              </Link>
+              </button>
               <button
                 onClick={() => {
                   props.setConfirmRidePopupPanel(false);

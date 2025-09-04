@@ -1,5 +1,11 @@
 import { validationResult } from "express-validator";
-import { getFare, initRide } from "../services/ride.service.js";
+import {
+  getFare,
+  initRide,
+  acceptRide,
+  startRide,
+  endRide,
+} from "../services/ride.service.js";
 import {
   getAddressCoordinate,
   getCaptainsInTheRadius,
@@ -59,7 +65,6 @@ async function createRide(req, res) {
     });
 
     console.log("Ride created successfully!");
-    
 
     res.status(201).json(rideWithUser);
   } catch (error) {
@@ -81,4 +86,95 @@ const calculateFare = async (req, res) => {
   }
 };
 
-export { createRide, calculateFare };
+const confirmRide = async (req, res) => {
+  const error = validationResult(req);
+  if (!error.isEmpty()) {
+    return res.status(400).json({ errors: error.array() });
+  }
+  try {
+    const { rideId } = req.body;
+    const captainId = req.user?._id || req.captain?._id;
+
+    console.log("Confirming ride:", rideId, "for captain:", captainId);
+
+    if (!rideId || !captainId) {
+      return res
+        .status(400)
+        .json({ error: "Ride ID and Captain ID are required" });
+    }
+
+    const ride = await acceptRide({ rideId, captain: { _id: captainId } });
+
+    sendMessageToSocketId(ride.user.socketId, {
+      type: "ride-confirmed",
+      payload: ride,
+    });
+
+    res.status(200).json(ride);
+  } catch (error) {
+    console.error("Error confirming ride:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const startRideController = async (req, res) => {
+  const error = validationResult(req);
+  if (!error.isEmpty()) {
+    return res.status(400).json({ errors: error.array() });
+  }
+
+  try {
+    const { rideId, otp } = req.body;
+    const captainId = req.user?._id || req.captain?._id;
+    if (!rideId || !otp || !captainId) {
+      return res
+        .status(400)
+        .json({ error: "Ride ID, OTP and Captain ID are required" });
+    }
+    const ride = await startRide({ rideId, otp, captain: { _id: captainId } });
+
+    sendMessageToSocketId(ride.user.socketId, {
+      type: "ride-started",
+      payload: ride,
+    });
+    res.status(200).json(ride);
+  } catch (error) {
+    console.error("Error starting ride:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const finishRide = async (req, res) => {
+  const error = validationResult(req);
+  if (!error.isEmpty()) {
+    return res.status(400).json({ errors: error.array() });
+  }
+  try {
+    const { rideId } = req.body;
+    const captainId = req.user?._id || req.captain?._id;
+    if (!rideId || !captainId) {
+      return res
+        .status(400)
+        .json({ error: "Ride ID and Captain ID are required" });
+    }
+    const ride = await endRide({ rideId, captain: { _id: captainId } });
+
+    sendMessageToSocketId(ride.user.socketId, {
+      type: "ride-ended",
+      payload: ride,
+    });
+    
+    res.status(200).json(ride);
+  } catch (error) {
+    console.error("Error finishing ride:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export {
+  createRide,
+  calculateFare,
+  confirmRide,
+  startRideController,
+  finishRide,
+};

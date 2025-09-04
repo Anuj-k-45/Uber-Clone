@@ -1,4 +1,9 @@
-import React, { useRef, useState, useEffect, useContext } from "react";
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useContext,
+} from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import "remixicon/fonts/remixicon.css";
@@ -10,6 +15,7 @@ import LookingForDriver from "../components/LookingForDriver";
 import WaitingForDriver from "../components/WaitingForDriver";
 import { UserDataContext } from "../context/userContext";
 import { SocketContext } from "../context/SocketContext";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
@@ -35,6 +41,7 @@ const Home = () => {
   const [fare, setFare] = useState(null);
   const [loadingFare, setLoadingFare] = useState(false);
   const [vehicleType, setVehicleType] = useState("");
+  const [ride, setRide] = useState(null);
 
   const { socket } = useContext(SocketContext);
   const { user } = useContext(UserDataContext);
@@ -43,6 +50,14 @@ const Home = () => {
     e.preventDefault();
     console.log("form submitted");
   };
+
+  socket.on("ride-confirmed", (data) => {
+    console.log("📥 Ride confirmed event received:", data);
+    setConfirmRidePannelOpen(false);
+    setRide(data);
+    setVehicleFound(true);
+    setWaitingForDriverOpen(true);
+  });
 
   async function createRide(vehicleType, fare) {
     try {
@@ -103,15 +118,23 @@ const Home = () => {
     return () => clearTimeout(handler);
   }, [pickup, destination, inputType, suppressSearch]);
 
-
-
-
   useEffect(() => {
     socket.emit("join", { userType: "user", userId: user._id });
   }, [user, socket]);
 
+  const navigate = useNavigate();
 
+  socket.on("ride-started", (data) => {
+    console.log("ride-started event received:", data);
+    setRide(data);
+    navigate("/riding", { state: { ride: data } });
+  });
 
+  socket.on("ride-ended", (data) => {
+    console.log("ride-completed event received:", data);
+    setRide(data);
+    navigate("/home", { state: { ride: data } });
+  });
 
   const handleSuggestionClick = (value) => {
     if (inputType === "pickup") setPickup(value);
@@ -196,6 +219,7 @@ const Home = () => {
         gsap.to(waitingForDriverRef.current, {
           transform: "translateY(0)",
         });
+        setVehicleFound(false);
       } else {
         gsap.to(waitingForDriverRef.current, {
           transform: "translateY(100%)",
@@ -399,7 +423,15 @@ const Home = () => {
         ref={waitingForDriverRef}
         className="fixed rounded-t-2xl w-full z-10 bottom-0 translate-y-full px-3 py-6 bg-white "
       >
-        <WaitingForDriver setWaitingForDriverOpen={setWaitingForDriverOpen} />
+        <WaitingForDriver
+          ride={ride}
+          vehicleType={vehicleType}
+          fare={fare}
+          pickup={pickup}
+          destination={destination}
+          setVehicleFound={setVehicleFound}
+          setWaitingForDriverOpen={setWaitingForDriverOpen}
+        />
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import { useContext } from "react";
 import { CaptainDataContext } from "../context/captainContext";
 import { SocketContext } from "../context/SocketContext";
 import { useEffect } from "react";
+import axios from "axios";
 
 const CaptainHome = () => {
   const ridePopupRef = useRef(null);
@@ -21,9 +22,6 @@ const CaptainHome = () => {
   const { socket } = useContext(SocketContext);
 
   const [ride, setRide] = useState(null);
-
-
-
 
   useEffect(() => {
     if (!socket) return;
@@ -41,35 +39,53 @@ const CaptainHome = () => {
     };
   }, [socket]);
 
-
-
   useEffect(() => {
-        socket.emit('join', {
+    socket.emit("join", {
+      userId: captain._id,
+      userType: "captain",
+    });
+    const updateLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          console.log(
+            position.coords.latitude + " " + position.coords.longitude
+          );
+
+          socket.emit("update-location-captain", {
             userId: captain._id,
-            userType: 'captain'
-        })
-        const updateLocation = () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
+            location: {
+              ltd: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+          });
+        });
+      }
+    };
 
-                  console.log(position.coords.latitude + " " + position.coords.longitude)
+    // const locationInterval = setInterval(updateLocation, 10000)
+    updateLocation();
 
-                    socket.emit('update-location-captain', {
-                        userId: captain._id,
-                        location: {
-                            ltd: position.coords.latitude,
-                            lng: position.coords.longitude
-                        }
-                    })
-                })
-            }
-        }
+    // return () => clearInterval(locationInterval)
+  }, [captain, socket]);
 
-        // const locationInterval = setInterval(updateLocation, 10000)
-        updateLocation()
-
-        // return () => clearInterval(locationInterval)
-    }, [captain, socket])
+  async function confirmRide() {
+    const response = await axios.post("http://localhost:4000/ride/confirm-ride", {
+      rideId: ride._id,
+      captain: captain._id,
+    },
+    { headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      }
+    }
+  );
+    if (response.status === 200) {
+      const data = response.data;
+      setRide(data);
+      setConfirmRidePopupPanel(true);
+    }
+    setRidePopupPanel(false);
+    console.log("ride confirmed");
+  }
 
   useGSAP(
     function () {
@@ -127,6 +143,7 @@ const CaptainHome = () => {
         <RidePopUp
           ride={ride}
           setRide={setRide}
+          confirmRide={confirmRide}
           setRidePopupPanel={setRidePopupPanel}
           confirmRidePopupPanel={setConfirmRidePopupPanel}
         />
@@ -137,6 +154,8 @@ const CaptainHome = () => {
       >
         <ConfirmRidePopUp
           ride={ride}
+          setRide={setRide}
+          confirmRide={confirmRide}
           setRidePopupPanel={setRidePopupPanel}
           setConfirmRidePopupPanel={setConfirmRidePopupPanel}
         />
